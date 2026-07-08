@@ -2,7 +2,7 @@
 
 # ==========================================
 # Автоустановщик Remnawave Node + Tuning
-# Версия: 3.0
+# Версия: 3.1
 # ==========================================
 
 # Цвета
@@ -11,6 +11,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
 # Глобальные переменные
@@ -36,7 +37,7 @@ show_banner() {
     echo "██████  █████   ██ ████ ██ ██ ██  ██ ███████ "
     echo "██   ██ ██      ██  ██  ██ ██  ██ ██ ██   ██ "
     echo "██   ██ ███████ ██      ██ ██   ████ ██   ██ "
-    echo -e "           Установка Node + Настройки v3.0${NC}"
+    echo -e "           Установка Node + Настройки v3.1${NC}"
     echo ""
 }
 
@@ -129,6 +130,68 @@ check_system() {
     
     echo ""
     echo -e "${GREEN}Проверка завершена.${NC}"
+}
+
+# --- НОВАЯ ФУНКЦИЯ: ТЕСТ СКОРОСТИ СЕРВЕРА ---
+run_benchmark() {
+    echo -e "${BLUE}=== ТЕСТ СКОРОСТИ СЕРВЕРА ===${NC}"
+    echo ""
+    echo -e "${YELLOW}Запуск теста производительности сервера...${NC}"
+    echo -e "${CYAN}Тест включает:${NC}"
+    echo "  • Процессор (CPU)"
+    echo "  • Оперативная память (RAM)"
+    echo "  • Скорость диска (I/O)"
+    echo "  • Скорость сети (Download/Upload)"
+    echo ""
+    echo -e "${YELLOW}Время выполнения: ~2-5 минут${NC}"
+    echo -e "${RED}⚠️  Тест может создать высокую нагрузку на сервер!${NC}"
+    echo ""
+    echo -n "Продолжить? (y/N): "
+    read bench_choice
+    
+    if [[ ! "$bench_choice" =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}Тест отменен.${NC}"
+        return
+    fi
+    
+    echo ""
+    echo -e "${BLUE}Начинаем тестирование...${NC}"
+    echo -e "${GREEN}Результаты будут показаны ниже:${NC}"
+    echo -e "${CYAN}========================================${NC}"
+    echo ""
+    
+    # Проверяем наличие wget
+    if ! command -v wget &> /dev/null; then
+        echo -e "${YELLOW}Устанавливаем wget...${NC}"
+        apt-get install -y wget > /dev/null 2>&1
+    fi
+    
+    # Запускаем тест
+    wget -qO- bench.tlab.pw | bash
+    
+    echo ""
+    echo -e "${CYAN}========================================${NC}"
+    echo -e "${GREEN}Тест завершен!${NC}"
+    echo ""
+    
+    # Предложение сохранить результат
+    echo -n "Сохранить результат в файл? (y/N): "
+    read save_result
+    
+    if [[ "$save_result" =~ ^[Yy]$ ]]; then
+        RESULT_FILE="/root/benchmark-$(date +%Y%m%d_%H%M%S).txt"
+        echo -e "${YELLOW}Результат будет сохранен в $RESULT_FILE${NC}"
+        echo -e "${YELLOW}Чтобы сохранить результат, скопируйте вывод выше в файл вручную.${NC}"
+        echo -e "${YELLOW}Или используйте: script -q -c 'wget -qO- bench.tlab.pw | bash' $RESULT_FILE${NC}"
+        echo ""
+        echo -n "Запустить тест с сохранением в файл? (y/N): "
+        read save_run
+        
+        if [[ "$save_run" =~ ^[Yy]$ ]]; then
+            script -q -c "wget -qO- bench.tlab.pw | bash" "$RESULT_FILE"
+            echo -e "${GREEN}Результат сохранен в $RESULT_FILE${NC}"
+        fi
+    fi
 }
 
 # --- ФУНКЦИЯ НАСТРОЙКИ FIREWALL ---
@@ -411,7 +474,7 @@ install_node_with_domain() {
     # Создаем директорию для сайта
     mkdir -p /var/www/$DOMAIN
     
-        # Создаем страницу-заглушку в стиле Immich
+    # Создаем страницу-заглушку в стиле Immich
     cat <<'EOF' > /var/www/$DOMAIN/index.html
 <!DOCTYPE html>
 <html lang="ru">
@@ -1076,8 +1139,9 @@ while true; do
     echo "6) Управление нодой (логи, обновления, перезапуск)"
     echo "7) Статус и информация"
     echo "8) Создать бэкап конфигов"
-    echo "9) 🗑️  Удалить этот скрипт"
-    echo "10) Выход"
+    echo "9) 🚀 Тест скорости сервера (benchmark)"
+    echo "10) 🗑️  Удалить этот скрипт"
+    echo "11) Выход"
     echo ""
     echo -n "Ваш выбор: "
     read choice
@@ -1124,9 +1188,14 @@ while true; do
             read -n 1 -s -r -p "Нажмите любую клавишу, чтобы вернуться в меню..."
             ;;
         9)
-            uninstall_script
+            run_benchmark
+            echo ""
+            read -n 1 -s -r -p "Нажмите любую клавишу, чтобы вернуться в меню..."
             ;;
         10)
+            uninstall_script
+            ;;
+        11)
             echo -e "${YELLOW}Выход.${NC}"
             exit 0
             ;;

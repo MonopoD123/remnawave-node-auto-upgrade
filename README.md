@@ -45,14 +45,8 @@
 - **Права:** Root доступ
 - **Интернет:** Доступ к репозиториям Docker и GitHub
 
-### 📦 Установка
+### 📦 Быстрый запуск
 
 ```bash
-# Скачивание скрипта
-wget -O remnawave-installer.sh https://raw.githubusercontent.com/yourusername/remnawave-installer/main/installer.sh
+bash <(curl -Ls https://raw.githubusercontent.com/MonopoD123/remnawave-node-auto-upgrade/refs/heads/main/install.sh)
 
-# Делаем исполняемым
-chmod +x remnawave-installer.sh
-
-# Запуск
-sudo ./remnawave-installer.sh
